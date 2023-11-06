@@ -2,13 +2,20 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 require("dotenv").config();
-const { ObjectId } = require("mongodb");
+const cookieParser = require('cookie-parser');
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 5000;
 
-//middleware
-app.use(cors());
+// middleware
+app.use(cors({
+    origin: [
+        'http://localhost:5173',
+    ],
+    credentials: true
+}));
 app.use(express.json());
+app.use(cookieParser());
+
 
 
 const { MongoClient, ServerApiVersion } = require('mongodb');
@@ -28,7 +35,13 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     // await client.connect();
 
-    const products = client.db("Assignment-11").collection("products");
+    const rooms = client.db("Assignment-11").collection("rooms");
+
+
+    app.get("/rooms", async (req, res) => {
+        const result = await rooms.find().toArray();
+        res.send(result);
+      });
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
