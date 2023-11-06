@@ -18,7 +18,7 @@ app.use(cookieParser());
 
 
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ni8nft9.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -38,10 +38,19 @@ async function run() {
     const rooms = client.db("Assignment-11").collection("rooms");
 
 
+    //get rooms
     app.get("/rooms", async (req, res) => {
         const result = await rooms.find().toArray();
         res.send(result);
       });
+
+    //find room with id
+        app.get("/rooms/:id", async (req, res) => {
+            const id = req.params.id;   
+            const query = { _id: new ObjectId(id) };
+            const result = await rooms.find(query).toArray();
+            res.send(result);
+          });
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
