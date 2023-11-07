@@ -32,7 +32,7 @@ async function run() {
   try {
     // MongoDB collections
     const rooms = client.db("Assignment-11").collection("rooms");
-    const booked = client.db("Assignment-11").collection("booked");
+    const bookings = client.db("Assignment-11").collection("bookings");
 
     //get rooms
     app.get("/rooms", async (req, res) => {
@@ -40,7 +40,7 @@ async function run() {
       res.send(result);
     });
 
-    //find room with id
+    //find single room with id
     app.get("/rooms/:id", async (req, res) => {
       const id = req.params.id;
       try {
@@ -52,6 +52,44 @@ async function run() {
         }
       } catch (error) {
         res.status(400).send("Invalid room ID");
+      }
+    });
+
+    // Book a Room for a Single Day API
+    app.post("/bookings", async (req, res) => {
+      const { roomId, date, userEmail } = req.body;
+
+      try {
+        const query = { _id: new ObjectId(roomId) };
+        const room = await rooms.findOne(query);
+
+        if (!room) {
+          return res.status(404).json({ error: "Room not found" });
+        }
+
+        // Perform validation and check availability for the selected date.
+        // If the room is available for the specified date, create a booking record.
+
+        // Example date validation code:
+        if (room.availability === 0) {
+          return res.status(400).json({ error: "Room not available!" });
+        }
+
+        // Create a booking record for the selected date
+        const booking = {
+          roomId,
+          date,
+          userEmail,
+        };
+        // Insert the booking into a "bookings" collection
+        const result = await bookings.insertOne(booking);
+
+        // Update the room's availability accordingly
+
+        res.json(result);
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Server error" });
       }
     });
 
