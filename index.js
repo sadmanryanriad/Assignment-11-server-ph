@@ -63,17 +63,18 @@ async function run() {
         const query = { _id: new ObjectId(roomId) };
         const room = await rooms.findOne(query);
 
+        //Check if there is any room
         if (!room) {
           return res.status(404).json({ error: "Room not found" });
         }
 
-        // Perform validation and check availability for the selected date.
-        // If the room is available for the specified date, create a booking record.
-
-        // Example date validation code:
-        if (room.availability === 0) {
+        // Check if the room is available
+        if (room.availability <= 0) {
           return res.status(400).json({ error: "Room not available!" });
         }
+
+        // Perform validation and check availability for the selected date.?
+        // If the room is available for the specified date, create a booking record?
 
         // Create a booking record for the selected date
         const booking = {
@@ -81,12 +82,15 @@ async function run() {
           date,
           userEmail,
         };
-        // Insert the booking into a "bookings" collection
+        // Insert the users booking info into a "bookings" collection
         const result = await bookings.insertOne(booking);
 
-        // Update the room's availability accordingly
+        // Update room availability by decreasing it by 1
+        const updatedAvailability = room.availability - 1;
+        await rooms.updateOne(query, { $set: { availability: updatedAvailability } });
 
         res.json(result);
+        
       } catch (error) {
         console.error(error);
         res.status(500).json({ error: "Server error" });

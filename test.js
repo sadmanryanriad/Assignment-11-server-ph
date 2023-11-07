@@ -1,6 +1,6 @@
-// Book a Room for a Single Day API
-app.post("/bookings", async (req, res) => {
-    const { roomId, date, user } = req.body;
+// ...
+app.post("/add-to-cart", async (req, res) => {
+    const { roomId } = req.body;
   
     try {
       const query = { _id: new ObjectId(roomId) };
@@ -10,27 +10,22 @@ app.post("/bookings", async (req, res) => {
         return res.status(404).json({ error: "Room not found" });
       }
   
-      // Perform validation and check availability for the selected date.
-      // If the room is available for the specified date, create a booking record.
-  
-      // Example date validation code:
-      if (room.availability === 0) {
+      // Check if the room is available
+      if (room.availability <= 0) {
         return res.status(400).json({ error: "Room not available!" });
       }
   
-      // Create a booking record for the selected date
-      const booking = {
-        roomId,
-        date,
-        user,
-      };
-      // Insert the booking into a "bookings" collection
-      // Update the room's availability accordingly
+      // Update room availability by decreasing it by 1
+      const updatedAvailability = room.availability - 1;
   
-      res.json({ message: "Booking successful", booking });
+      // Update the room's availability
+      await rooms.updateOne(query, { $set: { availability: updatedAvailability } });
+  
+      res.json({ success: "Room added to cart!" });
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: "Server error" });
     }
   });
+  // ...
   
