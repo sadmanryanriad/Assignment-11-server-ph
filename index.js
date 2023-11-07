@@ -124,6 +124,13 @@ async function run() {
       const result = await ratings.find().toArray();
       res.send(result);
     })
+    //get ratings by room id
+    app.get("/ratings/:roomId", async(req,res)=>{
+      const roomId = req.params.roomId;
+      const query = { roomId: roomId};
+      const result = await ratings.find(query).toArray();
+      res.send(result);
+    })
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
