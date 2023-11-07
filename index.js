@@ -33,6 +33,7 @@ async function run() {
     // MongoDB collections
     const rooms = client.db("Assignment-11").collection("rooms");
     const bookings = client.db("Assignment-11").collection("bookings");
+    const ratings = client.db("Assignment-11").collection("ratings");
 
     //get rooms
     app.get("/rooms", async (req, res) => {
@@ -110,6 +111,12 @@ async function run() {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await bookings.deleteOne(query);
+      res.send(result);
+    });
+    //create ratings
+    app.post("/ratings", async(req,res)=>{
+      const rating = req.body;
+      const result = await ratings.insertOne(rating);
       res.send(result);
     });
 
