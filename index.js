@@ -119,6 +119,11 @@ async function run() {
       const result = await ratings.insertOne(rating);
       res.send(result);
     });
+    //get ratings
+    app.get("/ratings", async(req,res)=>{
+      const result = await ratings.find().toArray();
+      res.send(result);
+    })
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
