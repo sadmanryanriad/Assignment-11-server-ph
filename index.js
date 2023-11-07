@@ -90,11 +90,19 @@ async function run() {
         await rooms.updateOne(query, { $set: { availability: updatedAvailability } });
 
         res.json(result);
-        
+
       } catch (error) {
         console.error(error);
         res.status(500).json({ error: "Server error" });
       }
+    });
+
+    //get my bookings 
+    app.get("/myBookings/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { userEmail: email };
+      const result = await bookings.find(query).toArray();
+      res.send(result);
     });
 
     // Send a ping to confirm a successful connection
