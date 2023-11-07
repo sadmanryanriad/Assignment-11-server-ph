@@ -87,21 +87,29 @@ async function run() {
 
         // Update room availability by decreasing it by 1
         const updatedAvailability = room.availability - 1;
-        await rooms.updateOne(query, { $set: { availability: updatedAvailability } });
+        await rooms.updateOne(query, {
+          $set: { availability: updatedAvailability },
+        });
 
         res.json(result);
-
       } catch (error) {
         console.error(error);
         res.status(500).json({ error: "Server error" });
       }
     });
 
-    //get my bookings 
+    //get my bookings
     app.get("/myBookings/:email", async (req, res) => {
       const email = req.params.email;
       const query = { userEmail: email };
       const result = await bookings.find(query).toArray();
+      res.send(result);
+    });
+    //Delete from my bookings
+    app.delete("/myBookings/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await bookings.deleteOne(query);
       res.send(result);
     });
 
