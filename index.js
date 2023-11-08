@@ -1,9 +1,11 @@
 const express = require("express");
-const app = express();
 const cors = require("cors");
-require("dotenv").config();
+const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+require("dotenv").config();
 
+const app = express();
 const port = process.env.PORT || 5000;
 
 // middleware
@@ -16,7 +18,6 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
-const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ni8nft9.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -28,12 +29,48 @@ const client = new MongoClient(uri, {
   },
 });
 
+// custom middlewares
+const verifyToken = async (req, res, next) => {
+  const token = req.cookies?.token;
+  if (!token) {
+    return res.status(401).send({ message: "unauthorized access" });
+  }
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+    if (err) {
+      return res.status(401).send({ message: "unauthorized access" });
+    }
+    req.user = decoded;
+    next();
+  });
+};
+
 async function run() {
   try {
     // MongoDB collections
     const rooms = client.db("Assignment-11").collection("rooms");
     const bookings = client.db("Assignment-11").collection("bookings");
     const ratings = client.db("Assignment-11").collection("ratings");
+
+    // auth related api JWT
+    app.post("/jwt", async (req, res) => {
+      const user = req.body;
+
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+        expiresIn: "1h",
+      });
+      res
+        .cookie("token", token, {
+          httpOnly: true,
+          secure: false,
+        })
+        .send({ success: true });
+    });
+    //clear cookie after logout
+    app.post('/logout', (req, res) => {
+      res.clearCookie('token');
+      res.send({ message: 'Logout successful' });
+    });
+    
 
     //get rooms
     app.get("/rooms", async (req, res) => {
@@ -42,7 +79,7 @@ async function run() {
     });
 
     //find single room with id
-    app.get("/rooms/:id", async (req, res) => {
+    app.get("/rooms/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
       try {
         const query = { _id: new ObjectId(id) };
@@ -57,7 +94,7 @@ async function run() {
     });
 
     // Book a Room for a Single Day API
-    app.post("/bookings", async (req, res) => {
+    app.post("/bookings", verifyToken,  async (req, res) => {
       const { roomId, date, userEmail } = req.body;
 
       try {
@@ -100,39 +137,39 @@ async function run() {
     });
 
     //get my bookings
-    app.get("/myBookings/:email", async (req, res) => {
+    app.get("/myBookings/:email", verifyToken,  async (req, res) => {
       const email = req.params.email;
       const query = { userEmail: email };
       const result = await bookings.find(query).toArray();
       res.send(result);
     });
     //Delete from my bookings
-    app.delete("/myBookings/:id", async (req, res) => {
+    app.delete("/myBookings/:id", verifyToken,  async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await bookings.deleteOne(query);
       res.send(result);
     });
     //update booking
-    app.post("/myBookings/update/:id",async(req,res)=>{
+    app.post("/myBookings/update/:id", verifyToken,  async (req, res) => {
       const id = req.params.id;
       const data = req.body;
-      const filter = { _id: new ObjectId(id)};
+      const filter = { _id: new ObjectId(id) };
       const options = { upsert: true };
       const updatedData = {
-        $set:{
+        $set: {
           roomId: data.roomId,
           userEmail: data.userEmail,
-          date: data.date
-        }
-      }
+          date: data.date,
+        },
+      };
       const result = await bookings.updateOne(filter, updatedData);
 
       res.send(result);
-    })
+    });
 
     //create ratings
-    app.post("/ratings", async (req, res) => {
+    app.post("/ratings", verifyToken,  async (req, res) => {
       const rating = req.body;
       const result = await ratings.insertOne(rating);
       res.send(result);
