@@ -11,7 +11,11 @@ const port = process.env.PORT || 5000;
 // middleware
 app.use(
   cors({
-    origin: ["http://localhost:5173","https://assignment-11-785f0.web.app", "https://assignment-11-785f0.firebaseapp.com"],
+    origin: [
+      "http://localhost:5173",
+      "https://assignment-11-785f0.web.app",
+      "https://assignment-11-785f0.firebaseapp.com",
+    ],
     credentials: true,
   })
 );
@@ -55,19 +59,18 @@ async function run() {
     app.post("/jwt", async (req, res) => {
       const user = req.body;
 
-      //expiration time 6 months
-      const expirationTime = 6 * 30 * 24 * 60 * 60;
       const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
-        expiresIn: expirationTime,
+        expiresIn: "10h",
       });
       res
         .cookie("token", token, {
           httpOnly: true,
-          secure: false,
+          secure: true,
+          sameSite: "none",
         })
         .send({ success: true });
     });
-    //clear cookie after logout
+    // clear cookie after logout
     app.post("/logout", (req, res) => {
       res.clearCookie("token");
       res.send({ message: "Logout successful" });
@@ -170,7 +173,7 @@ async function run() {
     });
 
     //create ratings
-    app.post("/ratings", verifyToken, async (req, res) => {
+    app.post("/ratings", async (req, res) => {
       const rating = req.body;
       const result = await ratings.insertOne(rating);
       res.send(result);
