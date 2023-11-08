@@ -114,23 +114,44 @@ async function run() {
       res.send(result);
     });
     //create ratings
-    app.post("/ratings", async(req,res)=>{
+    app.post("/ratings", async (req, res) => {
       const rating = req.body;
       const result = await ratings.insertOne(rating);
       res.send(result);
     });
     //get ratings
-    app.get("/ratings", async(req,res)=>{
+    app.get("/ratings", async (req, res) => {
       const result = await ratings.find().toArray();
       res.send(result);
-    })
+    });
     //get ratings by room id
-    app.get("/ratings/:roomId", async(req,res)=>{
+    app.get("/ratings/:roomId", async (req, res) => {
       const roomId = req.params.roomId;
-      const query = { roomId: roomId};
+      const query = { roomId: roomId };
       const result = await ratings.find(query).toArray();
       res.send(result);
-    })
+    });
+    //get ratings count and average by room id
+    app.get("/ratings/ratingsCount/:roomId", async (req, res) => {
+      const roomId = req.params.roomId;
+      const query = { roomId: roomId };
+      const result = await ratings.find(query).toArray();
+      const Count = result.length || 0;
+
+      // Calculate the total ratings and sum of ratings
+      let totalRatings = 0;
+      let sumOfRatings = 0;
+
+      for (const rating of result) {
+        totalRatings++;
+        sumOfRatings += parseInt(rating.rating);
+      }
+
+      // Calculate the average rating
+      const averageRating = totalRatings > 0 ? sumOfRatings / totalRatings : 0;
+
+      res.send({ ratingsCount: Count, averageRating: averageRating });
+    });
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
