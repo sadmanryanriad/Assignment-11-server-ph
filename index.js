@@ -113,6 +113,24 @@ async function run() {
       const result = await bookings.deleteOne(query);
       res.send(result);
     });
+    //update booking
+    app.post("/myBookings/update/:id",async(req,res)=>{
+      const id = req.params.id;
+      const data = req.body;
+      const filter = { _id: new ObjectId(id)};
+      const options = { upsert: true };
+      const updatedData = {
+        $set:{
+          roomId: data.roomId,
+          userEmail: data.userEmail,
+          date: data.date
+        }
+      }
+      const result = await bookings.updateOne(filter, updatedData);
+
+      res.send(result);
+    })
+
     //create ratings
     app.post("/ratings", async (req, res) => {
       const rating = req.body;
@@ -137,7 +155,6 @@ async function run() {
       const query = { roomId: roomId };
       const result = await ratings.find(query).toArray();
       const Count = result.length || 0;
-
       // Calculate the total ratings and sum of ratings
       let totalRatings = 0;
       let sumOfRatings = 0;
@@ -146,7 +163,6 @@ async function run() {
         totalRatings++;
         sumOfRatings += parseInt(rating.rating);
       }
-
       // Calculate the average rating
       const averageRating = totalRatings > 0 ? sumOfRatings / totalRatings : 0;
 
