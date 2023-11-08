@@ -11,7 +11,7 @@ const port = process.env.PORT || 5000;
 // middleware
 app.use(
   cors({
-    origin: ["http://localhost:5173"],
+    origin: ["http://localhost:5173","https://assignment-11-785f0.web.app/"],
     credentials: true,
   })
 );
